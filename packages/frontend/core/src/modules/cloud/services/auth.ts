@@ -14,6 +14,7 @@ import { AccountChanged } from '../events/account-changed';
 import { AccountLoggedIn } from '../events/account-logged-in';
 import { AccountLoggedOut } from '../events/account-logged-out';
 import { ServerStarted } from '../events/server-started';
+import { subscribePiscesToken } from '../pisces-bridge';
 import type { AuthStore } from '../stores/auth';
 import type { FetchService } from './fetch';
 
@@ -22,6 +23,7 @@ import type { FetchService } from './fetch';
 export class AuthService extends Service {
   session = this.framework.createEntity(AuthSession);
   private profileSubscription?: Subscription;
+  private readonly unsubscribePiscesToken: () => void;
 
   constructor(
     private readonly fetchService: FetchService,
@@ -54,6 +56,14 @@ export class AuthService extends Service {
       });
 
     this.subscribeProfile();
+
+    // When embedded in Pisces, the parent window may hand us the SSO credential
+    // after the initial session check has already run (and resolved as
+    // unauthenticated). Revalidate as soon as the token changes so the UI
+    // authenticates transparently instead of staying signed-out.
+    this.unsubscribePiscesToken = subscribePiscesToken(() => {
+      this.session.revalidate();
+    });
   }
 
   private onServerStarted() {
@@ -89,6 +99,7 @@ export class AuthService extends Service {
     super.dispose();
     this.profileSubscription?.unsubscribe();
     this.profileSubscription = undefined;
+    this.unsubscribePiscesToken();
   }
 
   async sendEmailMagicLink(

@@ -1,5 +1,6 @@
 import { ScrollableContainer } from '@affine/component';
 import { MenuItem } from '@affine/component/ui/menu';
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { AuthService, DefaultServerService } from '@affine/core/modules/cloud';
 import { GlobalDialogService } from '@affine/core/modules/dialogs';
 import { type WorkspaceMetadata } from '@affine/core/modules/workspace';
@@ -67,6 +68,7 @@ export const UserWithWorkspaceList = ({
   const globalDialogService = useService(GlobalDialogService);
   const session = useLiveData(useService(AuthService).session.session$);
   const defaultServerService = useService(DefaultServerService);
+  const isPiscesSSO = useIsPiscesSSO();
 
   const isAuthenticated = session.status === 'authenticated';
 
@@ -80,7 +82,9 @@ export const UserWithWorkspaceList = ({
       defaultServerService.server.config$.value.features.includes(
         ServerFeature.LocalWorkspace
       );
-    if (!isAuthenticated && !enableLocalWorkspace) {
+    // In Pisces SSO mode authentication is transparent; let the create dialog
+    // handle waiting for the session instead of prompting a sign-in here.
+    if (!isAuthenticated && !enableLocalWorkspace && !isPiscesSSO) {
       return openSignInModal();
     }
     track.$.navigationPanel.workspaceList.createWorkspace();
@@ -94,6 +98,7 @@ export const UserWithWorkspaceList = ({
     globalDialogService,
     defaultServerService,
     isAuthenticated,
+    isPiscesSSO,
     onCreatedWorkspace,
     onEventEnd,
     openSignInModal,

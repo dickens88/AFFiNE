@@ -29,6 +29,7 @@ import {
   SessionIdSchema,
 } from './input';
 import { isLikelyJwt, JwtSessionService } from './jwt-session';
+import { PiscesSsoService } from './pisces-sso';
 import { AuthService } from './service';
 import { Session, TokenSession } from './session';
 
@@ -47,6 +48,7 @@ type AuthenticatedRequestSession =
 export class AuthGuard implements CanActivate, OnModuleInit {
   private auth!: AuthService;
   private jwtSession!: JwtSessionService;
+  private pisces!: PiscesSsoService;
   private readonly cachedVersionRange = new Map<string, semver.Range | null>();
   private static readonly HARD_REQUIRED_VERSION = '>=0.25.0';
   private static readonly CANARY_REQUIRED_VERSION = 'canary (within 2 months)';
@@ -62,6 +64,7 @@ export class AuthGuard implements CanActivate, OnModuleInit {
   onModuleInit() {
     this.auth = this.ref.get(AuthService, { strict: false });
     this.jwtSession = this.ref.get(JwtSessionService, { strict: false });
+    this.pisces = this.ref.get(PiscesSsoService, { strict: false });
   }
 
   async canActivate(context: ExecutionContext) {
@@ -135,6 +138,20 @@ export class AuthGuard implements CanActivate, OnModuleInit {
     res?: Response,
     isPublic = false
   ): Promise<AuthenticatedRequestSession | null> {
+    // Pisces SSO takes precedence: validate the forwarded credential
+    // (JWT bearer in local mode, or W3 cookies in tianyan mode) against the
+    // Pisces deployment and provision a synthetic session. Falls through to the
+    // legacy paths (e.g. AFFiNE access tokens) when no Pisces credential is
+    // present or validation fails.
+    if (this.pisces.enabled && !req.session) {
+      const piscesSession = await this.pisces.resolveSession(req);
+      if (piscesSession) {
+        req.session = piscesSession;
+        req.authType = 'session';
+        return { type: 'cookie_session', session: piscesSession };
+      }
+    }
+
     const bearer = req.headers.authorization
       ? extractTokenFromHeader(req.headers.authorization)
       : undefined;

@@ -67,13 +67,6 @@ export const hideInWideScreen = style({
     },
   },
 });
-export const hideInSmallScreen = style({
-  '@media': {
-    'screen and (max-width: 1024px)': {
-      display: 'none',
-    },
-  },
-});
 export const menu = style({
   width: '100vw',
   height: '100vh',

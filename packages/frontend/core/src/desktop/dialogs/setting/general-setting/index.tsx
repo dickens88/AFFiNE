@@ -1,3 +1,4 @@
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { UserFeatureService } from '@affine/core/modules/cloud/services/user-feature';
 import type { SettingTab } from '@affine/core/modules/dialogs/constant';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
@@ -61,6 +62,7 @@ export const useGeneralSettingList = (): GeneralSettingList => {
   }, [userFeatureService]);
 
   const meetingSettings = useLiveData(meetingSettingsService.settings$);
+  const isPiscesSSO = useIsPiscesSSO();
 
   return useMemo(() => {
     const settings: GeneralSettingList = [
@@ -134,20 +136,20 @@ export const useGeneralSettingList = (): GeneralSettingList => {
       });
     }
 
-    settings.push(
-      {
+    if (!isPiscesSSO) {
+      settings.push({
         key: 'experimental-features',
         title: t['com.affine.settings.workspace.experimental-features'](),
         icon: <ExperimentIcon />,
         testId: 'experimental-features-trigger',
-      },
-      {
-        key: 'about',
-        title: t['com.affine.aboutAFFiNE.title'](),
-        icon: <InformationIcon />,
-        testId: 'about-panel-trigger',
-      }
-    );
+      });
+    }
+    settings.push({
+      key: 'about',
+      title: t['com.affine.aboutAFFiNE.title'](),
+      icon: <InformationIcon />,
+      testId: 'about-panel-trigger',
+    });
     return settings;
   }, [
     t,
@@ -155,6 +157,7 @@ export const useGeneralSettingList = (): GeneralSettingList => {
     enableEditorSettings,
     meetingSettings?.enabled,
     hasPaymentFeature,
+    isPiscesSSO,
   ]);
 };
 

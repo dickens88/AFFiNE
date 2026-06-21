@@ -18,7 +18,6 @@ import {
 } from './base';
 import { SocketIoAdapter } from './base/websocket';
 import { AuthGuard } from './core/auth';
-import { TelemetryService } from './core/telemetry/service';
 import { serverTimingAndCache } from './middleware/timing';
 
 const OneMB = 1024 * 1024;
@@ -39,21 +38,13 @@ export async function run() {
   app.useLogger(logger);
   const config = app.get(Config);
   const url = app.get(URLHelper);
-  let telemetry: TelemetryService | null = null;
-  try {
-    telemetry = app.get(TelemetryService, { strict: false });
-  } catch {
-    telemetry = null;
-  }
 
   const defaultAllowedOrigins = buildCorsAllowedOrigins(url);
 
   app.enableCors((req, callback) => {
     const requestPath = req.path ?? req.url ?? '';
-    const appendedOrigins = telemetry?.getAllowedOrigins(requestPath) ?? [];
-    const finalAllowedOrigins = appendedOrigins.length
-      ? new Set([...defaultAllowedOrigins, ...appendedOrigins])
-      : defaultAllowedOrigins;
+    const appendedOrigins: string[] = [];
+    const finalAllowedOrigins = defaultAllowedOrigins;
 
     callback(null, {
       origin: (origin, originCallback) => {

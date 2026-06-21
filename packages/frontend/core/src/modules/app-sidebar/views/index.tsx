@@ -343,7 +343,6 @@ export const ShellAppSidebarFallback = () => {
 };
 
 export * from './add-page-button';
-export * from './app-download-button';
 export * from './app-updater-button';
 export * from './category-divider';
 export * from './index.css';

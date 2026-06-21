@@ -1,6 +1,7 @@
 import { SettingRow } from '@affine/component/setting-components';
 import { Button } from '@affine/component/ui/button';
 import { useEnableCloud } from '@affine/core/components/hooks/affine/use-enable-cloud';
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import {
   type Workspace,
   WorkspaceService,
@@ -26,6 +27,8 @@ export const EnableCloudPanel = ({
   const name = useLiveData(workspace.name$);
   const flavour = workspace.flavour;
 
+  const isPiscesSSO = useIsPiscesSSO();
+
   const confirmEnableCloudAndClose = useCallback(() => {
     if (!workspace) return;
     confirmEnableCloud(workspace, {
@@ -35,7 +38,7 @@ export const EnableCloudPanel = ({
     });
   }, [confirmEnableCloud, onCloseSetting, workspace]);
 
-  if (flavour !== 'local') {
+  if (flavour !== 'local' || isPiscesSSO) {
     return null;
   }
 

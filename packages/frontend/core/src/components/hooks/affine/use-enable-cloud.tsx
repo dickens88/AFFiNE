@@ -8,6 +8,7 @@ import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback } from 'react';
 
 import { useNavigateHelper } from '../use-navigate-helper';
+import { useIsPiscesSSO } from './use-is-pisces-sso';
 
 interface ConfirmEnableCloudOptions {
   /**
@@ -33,6 +34,7 @@ export const useEnableCloud = () => {
   const workspacesService = useService(WorkspacesService);
   const serversService = useService(ServersService);
   const serverList = useLiveData(serversService.servers$);
+  const isPiscesSSO = useIsPiscesSSO();
 
   const { jumpToPage } = useNavigateHelper();
 
@@ -68,16 +70,20 @@ export const useEnableCloud = () => {
 
   const signInOrEnableCloud = useCallback(
     async (...args: ConfirmEnableArgs) => {
-      // not logged in, open login modal
-      if (loginStatus === 'unauthenticated') {
-        openSignIn();
-      }
-
       if (loginStatus === 'authenticated') {
         await enableCloud(...args);
+        return;
       }
+      // In Pisces SSO mode authentication is handled transparently; skip the
+      // sign-in modal and wait for the session to load instead.
+      if (isPiscesSSO) {
+        await authService.session.waitForAuthenticated();
+        await enableCloud(...args);
+        return;
+      }
+      openSignIn();
     },
-    [enableCloud, loginStatus, openSignIn]
+    [authService.session, enableCloud, isPiscesSSO, loginStatus, openSignIn]
   );
 
   const confirmEnableCloud = useCallback(
@@ -104,7 +110,7 @@ export const useEnableCloud = () => {
           description: t['Enable AFFiNE Cloud Description'](),
           cancelText: t['com.affine.enableAffineCloudModal.button.cancel'](),
           confirmText:
-            loginStatus === 'authenticated'
+            loginStatus === 'authenticated' || isPiscesSSO
               ? t['Enable']()
               : t['Sign in and Enable'](),
           confirmButtonOptions: {
@@ -128,6 +134,7 @@ export const useEnableCloud = () => {
     [
       closeConfirmModal,
       globalDialogService,
+      isPiscesSSO,
       loginStatus,
       openConfirmModal,
       serverList.length,

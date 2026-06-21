@@ -21,6 +21,7 @@ import {
 } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { useIsPiscesSSO } from '../../../components/hooks/affine/use-is-pisces-sso';
 import {
   RouteLogic,
   useNavigateHelper,
@@ -53,6 +54,7 @@ export const Component = ({
   const loggedIn = useLiveData(
     authService.session.status$.map(s => s === 'authenticated')
   );
+  const isPiscesSSO = useIsPiscesSSO();
   const enableLocalWorkspace =
     useLiveData(
       defaultServerService.server.config$.selector(
@@ -96,6 +98,11 @@ export const Component = ({
     }
 
     if (!enableLocalWorkspace && !loggedIn) {
+      // In Pisces SSO mode authentication is transparent; wait for the session
+      // to resolve instead of redirecting to a sign-in page that doesn't apply.
+      if (isPiscesSSO) {
+        return;
+      }
       localStorage.removeItem('last_workspace_id');
       jumpToSignIn();
       return;
@@ -130,6 +137,7 @@ export const Component = ({
   }, [
     enableLocalWorkspace,
     createCloudWorkspace,
+    isPiscesSSO,
     list,
     openPage,
     searchParams,

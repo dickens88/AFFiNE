@@ -1129,10 +1129,6 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.auth.open.affine"](): string;
     /**
-      * `Download app`
-      */
-    ["com.affine.auth.open.affine.download-app"](): string;
-    /**
       * `Try again`
       */
     ["com.affine.auth.open.affine.try-again"](): string;
@@ -3032,10 +3028,6 @@ export function useAFFiNEI18N(): {
       * `Contact us`
       */
     ["com.affine.other-page.nav.contact-us"](): string;
-    /**
-      * `Download app`
-      */
-    ["com.affine.other-page.nav.download-app"](): string;
     /**
       * `Official website`
       */

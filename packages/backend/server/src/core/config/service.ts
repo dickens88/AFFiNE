@@ -150,5 +150,14 @@ export class ServerService implements OnApplicationBootstrap {
     } else {
       this.disableFeature(ServerFeature.LocalWorkspace);
     }
+
+    // Expose Pisces SSO mode to the frontend so it can suppress
+    // sign-in and "enable cloud" prompts that don't apply in SSO deployments.
+    const pisces = (this.configFactory.config as any).pisces;
+    if (pisces?.enabled) {
+      this.enableFeature(ServerFeature.PiscesSSO);
+    } else {
+      this.disableFeature(ServerFeature.PiscesSSO);
+    }
   }
 }

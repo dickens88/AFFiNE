@@ -13,6 +13,7 @@ import {
   GlobalDialogService,
 } from '@affine/core/modules/dialogs';
 import { WorkspacesService } from '@affine/core/modules/workspace';
+import { ServerFeature } from '@affine/graphql';
 import { useI18n } from '@affine/i18n';
 import { CloudWorkspaceIcon } from '@blocksuite/icons/rc';
 import { FrameworkScope, useLiveData, useService } from '@toeverything/infra';
@@ -40,6 +41,11 @@ const Dialog = ({
   const authService = useService(AuthService);
   const account = useLiveData(authService.session.account$);
   const loginStatus = useLiveData(useService(AuthService).session.status$);
+  const isPiscesSSO = useLiveData(
+    selectedServer.config$.selector(c =>
+      c.features.includes(ServerFeature.PiscesSSO)
+    )
+  );
   const globalDialogService = useService(GlobalDialogService);
   const workspacesService = useService(WorkspacesService);
   const workspaceMeta = useLiveData(
@@ -87,15 +93,17 @@ const Dialog = ({
   }, [globalDialogService, selectedServer.baseUrl]);
 
   const signInOrEnableCloud = useAsyncCallback(async () => {
-    // not logged in, open login modal
-    if (loginStatus === 'unauthenticated') {
-      openSignIn();
-    }
-
     if (loginStatus === 'authenticated') {
       await enableCloud();
+      return;
     }
-  }, [enableCloud, loginStatus, openSignIn]);
+    if (isPiscesSSO) {
+      await authService.session.waitForAuthenticated();
+      await enableCloud();
+      return;
+    }
+    openSignIn();
+  }, [authService.session, enableCloud, isPiscesSSO, loginStatus, openSignIn]);
   return (
     <div className={styles.root}>
       <CloudWorkspaceIcon width={'36px'} height={'36px'} />

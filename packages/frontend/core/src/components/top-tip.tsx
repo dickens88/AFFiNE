@@ -4,6 +4,7 @@ import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback, useState } from 'react';
 
 import { useEnableCloud } from '../components/hooks/affine/use-enable-cloud';
+import { useIsPiscesSSO } from '../components/hooks/affine/use-is-pisces-sso';
 import { AuthService } from '../modules/cloud';
 import { GlobalDialogService } from '../modules/dialogs';
 import type { Workspace } from '../modules/workspace';
@@ -64,6 +65,8 @@ export const TopTip = ({
   const loginStatus = useLiveData(useService(AuthService).session.status$);
   const isLoggedIn = loginStatus === 'authenticated';
 
+  const isPiscesSSO = useIsPiscesSSO();
+
   const [showWarning, setShowWarning] = useState(shouldShowWarning);
   const [showLocalDemoTips, setShowLocalDemoTips] = useState(true);
   const confirmEnableCloud = useEnableCloud();
@@ -75,6 +78,7 @@ export const TopTip = ({
 
   if (
     !BUILD_CONFIG.isElectron &&
+    !isPiscesSSO &&
     showLocalDemoTips &&
     workspace.flavour === 'local'
   ) {

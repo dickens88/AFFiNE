@@ -2,6 +2,7 @@ import { DebugLogger } from '@affine/debug';
 import { UserFriendlyError } from '@affine/error';
 import { fromPromise, Service } from '@toeverything/infra';
 
+import { getPiscesToken, isPiscesEmbedded } from '../pisces-bridge';
 import type { ServerService } from './server';
 
 const logger = new DebugLogger('affine:fetch');
@@ -50,14 +51,25 @@ export class FetchService extends Service {
 
     let res: Response;
 
+    // When embedded in Pisces, attach the Pisces SSO credential: a Bearer token
+    // (local JWT mode) and/or forwarded cookies (tianyan W3 mode).
+    const piscesToken = getPiscesToken();
+    const piscesAuthHeader = piscesToken
+      ? { Authorization: `Bearer ${piscesToken}` }
+      : undefined;
+    const credentials =
+      init?.credentials ?? (isPiscesEmbedded() ? 'include' : undefined);
+
     try {
       res = await globalThis.fetch(
         new URL(input, this.serverService.server.serverMetadata.baseUrl),
         {
           ...init,
+          credentials,
           signal: abortController.signal,
           headers: {
             ...init?.headers,
+            ...piscesAuthHeader,
             'x-affine-version': BUILD_CONFIG.appVersion,
           },
         }

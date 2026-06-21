@@ -11,6 +11,7 @@ export enum ServerFeature {
   Indexer = 'indexer',
   Comment = 'comment',
   LocalWorkspace = 'local_workspace',
+  PiscesSSO = 'pisces_sso',
 }
 
 registerEnumType(ServerFeature, {

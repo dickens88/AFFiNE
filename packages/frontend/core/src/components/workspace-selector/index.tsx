@@ -165,13 +165,17 @@ export const WorkspaceNavigator = ({
         });
 
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
           closeInactiveViews();
           jumpToPage(workspaceMetadata.id, 'all');
           return new Promise(resolve =>
             setTimeout(resolve, 150)
           ); /* start transition after 150ms */
         });
+        // In embedded/iframe contexts the browser frequently skips the
+        // transition, rejecting `ready` with "Transition was skipped". That is
+        // harmless but surfaces as an uncaught rejection, so swallow it.
+        transition.ready.catch(() => {});
       } else {
         closeInactiveViews();
         jumpToPage(workspaceMetadata.id, 'all');
@@ -183,7 +187,7 @@ export const WorkspaceNavigator = ({
     (payload: { metadata: WorkspaceMetadata; defaultDocId?: string }) => {
       onCreatedWorkspace?.(payload);
       if (document.startViewTransition) {
-        document.startViewTransition(() => {
+        const transition = document.startViewTransition(() => {
           if (payload.defaultDocId) {
             jumpToPage(payload.metadata.id, payload.defaultDocId);
           } else {
@@ -193,6 +197,10 @@ export const WorkspaceNavigator = ({
             setTimeout(resolve, 150)
           ); /* start transition after 150ms */
         });
+        // In embedded/iframe contexts the browser frequently skips the
+        // transition, rejecting `ready` with "Transition was skipped". That is
+        // harmless but surfaces as an uncaught rejection, so swallow it.
+        transition.ready.catch(() => {});
       } else {
         if (payload.defaultDocId) {
           jumpToPage(payload.metadata.id, payload.defaultDocId);
