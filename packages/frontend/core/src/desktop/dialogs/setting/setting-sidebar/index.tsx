@@ -1,6 +1,7 @@
 import { Scrollable } from '@affine/component';
 import { Avatar } from '@affine/component/ui/avatar';
 import { UserPlanButton } from '@affine/core/components/affine/auth/user-plan-button';
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { useCatchEventCallback } from '@affine/core/components/hooks/use-catch-event-hook';
 import { AuthService } from '@affine/core/modules/cloud';
 import { GlobalDialogService } from '@affine/core/modules/dialogs';
@@ -167,6 +168,7 @@ export const SettingSidebar = ({
 }) => {
   const t = useI18n();
   const loginStatus = useLiveData(useService(AuthService).session.status$);
+  const isPiscesSSO = useIsPiscesSSO();
   const generalList = useGeneralSettingList();
   const workspaceSettingList = useWorkspaceSettingList();
   const gotoTab = useCallback(
@@ -215,7 +217,9 @@ export const SettingSidebar = ({
         {t['com.affine.settingSidebar.title']()}
       </div>
 
-      {loginStatus === 'unauthenticated' ? <SignInButton /> : null}
+      {loginStatus === 'unauthenticated' && !isPiscesSSO ? (
+        <SignInButton />
+      ) : null}
       {loginStatus === 'authenticated' ? (
         <Suspense>
           <UserInfo

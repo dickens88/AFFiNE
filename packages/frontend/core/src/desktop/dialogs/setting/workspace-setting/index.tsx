@@ -1,3 +1,4 @@
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { useWorkspaceInfo } from '@affine/core/components/hooks/use-workspace-info';
 import { ServerService } from '@affine/core/modules/cloud';
 import type { SettingTab } from '@affine/core/modules/dialogs/constant';
@@ -68,6 +69,7 @@ export const useWorkspaceSettingList = (): SettingSidebarItem[] => {
   const workspaceService = useService(WorkspaceService);
   const information = useWorkspaceInfo(workspaceService.workspace);
   const serverService = useService(ServerService);
+  const isPiscesSSO = useIsPiscesSSO();
 
   const isSelfhosted = useLiveData(
     serverService.server.config$.selector(
@@ -100,8 +102,8 @@ export const useWorkspaceSettingList = (): SettingSidebarItem[] => {
         icon: <CollaborationIcon />,
         testId: 'workspace-setting:members',
       },
-      {
-        key: 'workspace:integrations',
+      !isPiscesSSO && {
+        key: 'workspace:integrations' as SettingTab,
         title: t['com.affine.integration.integrations'](),
         icon: <IntegrationsIcon />,
         testId: 'workspace-setting:integrations',
@@ -134,7 +136,7 @@ export const useWorkspaceSettingList = (): SettingSidebarItem[] => {
         testId: 'workspace-setting:license',
       },
     ].filter((item): item is SettingSidebarItem => !!item);
-  }, [showBilling, showLicense, t]);
+  }, [isPiscesSSO, showBilling, showLicense, t]);
 
   return items;
 };

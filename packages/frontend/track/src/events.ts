@@ -7,7 +7,6 @@ type CmdkEvents = 'quickSearch' | 'recentDocs' | 'searchResultsDocs';
 type AppEvents =
   | 'checkUpdates'
   | 'downloadUpdate'
-  | 'downloadApp'
   | 'quitAndInstall'
   | 'openChangelog'
   | 'dismissChangelog'
@@ -379,12 +378,7 @@ interface PageEvents extends PageDivision {
       tags: ['createDoc', 'tagDoc', 'drop'];
       favorites: ['createDoc', 'drop'];
       migrationData: ['openMigrationDataHelp'];
-      bottomButtons: [
-        'downloadApp',
-        'quitAndInstall',
-        'openChangelog',
-        'dismissChangelog',
-      ];
+      bottomButtons: ['quitAndInstall', 'openChangelog', 'dismissChangelog'];
       others: ['navigate'];
       importModal: ['open'];
       workspaceList: [

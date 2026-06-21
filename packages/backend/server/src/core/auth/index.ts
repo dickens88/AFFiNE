@@ -15,6 +15,7 @@ import { MagicLinkAuthService } from './magic-link';
 import { AuthMethodsService } from './methods';
 import { SessionExchangeService } from './native-exchange';
 import { OpenAppAuthService } from './open-app';
+import { PiscesSsoService } from './pisces-sso';
 import { AuthResolver } from './resolver';
 import { AuthService } from './service';
 import { SessionIssuer } from './session-issuer';
@@ -34,10 +35,12 @@ import { SessionIssuer } from './session-issuer';
     SessionExchangeService,
     AuthCronJob,
     AuthWebsocketOptionsProvider,
+    PiscesSsoService,
   ],
   exports: [
     AuthService,
     AuthGuard,
+    PiscesSsoService,
     JwtSessionService,
     SessionIssuer,
     AuthChallengeStore,

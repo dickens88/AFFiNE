@@ -91,20 +91,6 @@ type AdminDashboardValueDayPoint {
   value: SafeInt!
 }
 
-type AdminLicensePreview {
-  endAt: DateTime!
-  entity: String!
-  expiresAt: DateTime!
-  id: String!
-  issuedAt: DateTime!
-  issuer: String!
-  plan: SubscriptionPlan!
-  quantity: Int!
-  recurring: SubscriptionRecurring!
-  valid: Boolean!
-  workspaceId: String!
-}
-
 type AdminSharedLinkTopItem {
   docId: String!
   guestViews: SafeInt!
@@ -1407,15 +1393,6 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 """
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
-type License {
-  expiredAt: DateTime
-  installedAt: DateTime!
-  quantity: Int!
-  recurring: SubscriptionRecurring!
-  validatedAt: DateTime!
-  variant: SubscriptionVariant
-}
-
 type LimitedUserType {
   """User email"""
   email: String!
@@ -1540,7 +1517,6 @@ type MissingOauthQueryParameterDataType {
 type Mutation {
   abortBlobUpload(key: String!, uploadId: String!, workspaceId: String!): Boolean!
   acceptInviteById(inviteId: String!, sendAcceptMail: Boolean @deprecated(reason: "never used"), workspaceId: String @deprecated(reason: "never used")): Boolean!
-  activateLicense(license: String!, workspaceId: String!): License!
 
   """add a blob to context"""
   addContextBlob(options: AddContextBlobInput!): CopilotContextBlob!
@@ -1596,7 +1572,6 @@ type Mutation {
   createCustomerPortal: String!
   createInviteLink(expireTime: WorkspaceInviteLinkExpireTime!, workspaceId: String!): InviteLink!
   createReply(input: ReplyCreateInput!): ReplyObjectType!
-  createSelfhostWorkspaceCustomerPortal(workspaceId: String!): String!
 
   """Create a new user"""
   createUser(input: CreateUserInput!): UserType!
@@ -1604,7 +1579,6 @@ type Mutation {
   """Create a new workspace"""
   createWorkspace(init: Upload): WorkspaceType!
   createWorkspaceByokLocalLease(input: CreateWorkspaceByokLocalLeaseInput!): CreateWorkspaceByokLocalLeaseResultType!
-  deactivateLicense(workspaceId: String!): Boolean!
   deleteAccount: DeleteAccount!
   deleteBlob(hash: String @deprecated(reason: "use parameter [key]"), key: String, permanently: Boolean! = false, workspaceId: String!): Boolean!
 
@@ -1632,7 +1606,6 @@ type Mutation {
 
   """import users"""
   importUsers(input: ImportUsersInput!): [UserImportResultType!]!
-  installLicense(license: Upload!, workspaceId: String!): License!
   inviteMembers(emails: [String!]!, workspaceId: String!): [InviteResult!]!
   leaveWorkspace(sendLeaveMail: Boolean @deprecated(reason: "no used anymore"), workspaceId: String!, workspaceName: String @deprecated(reason: "no longer used")): Boolean!
   linkCalDAVAccount(input: LinkCalDAVAccountInput!): CalendarAccountObjectType!
@@ -1640,7 +1613,6 @@ type Mutation {
 
   """mention user in a doc"""
   mentionUser(input: MentionInput!): ID!
-  previewLicense(license: Upload!): AdminLicensePreview!
   publishDoc(docId: String!, mode: PublicDocMode = Page, workspaceId: String!): DocType!
 
   """queue workspace doc embedding"""
@@ -1825,13 +1797,6 @@ type NotificationWorkspaceType {
 
   """Workspace name"""
   name: String!
-}
-
-enum OAuthProviderType {
-  Apple
-  GitHub
-  Google
-  OIDC
 }
 
 type PageInfo {
@@ -2251,7 +2216,6 @@ type ServerConfigType {
 
   """server identical name could be shown as badge on user interface"""
   name: String!
-  oauthProviders: [OAuthProviderType!]!
 
   """server type"""
   type: ServerDeploymentType!
@@ -2274,6 +2238,7 @@ enum ServerFeature {
   LocalWorkspace
   OAuth
   Payment
+  PiscesSSO
 }
 
 type SpaceAccessDeniedDataType {
@@ -2886,9 +2851,6 @@ type WorkspaceType {
   """Get user invoice count"""
   invoiceCount: Int!
   invoices(skip: Int, take: Int = 8): [InvoiceType!]!
-
-  """The selfhost license of the workspace"""
-  license: License
 
   """member count of workspace"""
   memberCount: Int!

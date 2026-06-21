@@ -430,5 +430,52 @@ export class UserModel extends BaseModel {
     return count;
   }
 
+  /**
+   * Find or provision a local user from a Pisces SSO identity.
+   *
+   * The Pisces `username`/`cn` is the stable external identifier; it is stored
+   * on a {@link ConnectedAccount} with provider `pisces`, mirroring the OAuth
+   * account linking flow. When no email is provided by the SSO source a stable
+   * placeholder is synthesized so the local `User` record stays consistent.
+   */
+  async getOrCreateUserFromPisces(input: {
+    username: string;
+    email?: string;
+    name?: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    const provider = 'pisces';
+    const connectedAccount = await this.getConnectedAccount(
+      provider,
+      input.username
+    );
+
+    if (connectedAccount) {
+      return connectedAccount.user;
+    }
+
+    const email = input.email?.trim()
+      ? input.email.trim()
+      : `${input.username}@pisces.local`;
+
+    const user = await this.fulfill(email, {
+      name: input.name ?? input.username,
+      avatarUrl: input.avatarUrl,
+    });
+
+    await this.createConnectedAccount({
+      userId: user.id,
+      provider,
+      providerAccountId: input.username,
+      accessToken: '',
+    });
+
+    this.logger.debug(
+      `User [${user.id}] linked to Pisces account [${input.username}]`
+    );
+
+    return user;
+  }
+
   // #endregion
 }

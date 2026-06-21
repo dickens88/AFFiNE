@@ -2990,6 +2990,7 @@ export enum ServerFeature {
   LocalWorkspace = 'LocalWorkspace',
   OAuth = 'OAuth',
   Payment = 'Payment',
+  PiscesSSO = 'PiscesSSO',
 }
 
 export interface SpaceAccessDeniedDataType {

@@ -1,6 +1,7 @@
 import { IconButton, Menu, MenuItem } from '@affine/component';
 import { Divider } from '@affine/component/ui/divider';
 import { useEnableCloud } from '@affine/core/components/hooks/affine/use-enable-cloud';
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { useSignOut } from '@affine/core/components/hooks/affine/use-sign-out';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { useNavigateHelper } from '@affine/core/components/hooks/use-navigate-helper';
@@ -125,11 +126,18 @@ const CloudWorkSpaceList = ({
   workspaces,
   onClickWorkspace,
   onClickEnableCloud,
+  hideServerInfo,
 }: {
   server: Server;
   workspaces: WorkspaceMetadata[];
   onClickWorkspace: (workspaceMetadata: WorkspaceMetadata) => void;
   onClickEnableCloud?: (meta: WorkspaceMetadata) => void;
+  /**
+   * Hide the server header + sign-in row, showing only the workspaces. Used in
+   * Pisces SSO mode where the cloud server is implicit (the only backend) and
+   * the "AFFiNE Canary Cloud / sign in" chrome is just noise.
+   */
+  hideServerInfo?: boolean;
 }) => {
   const t = useI18n();
   const globalContextService = useService(GlobalContextService);
@@ -139,6 +147,7 @@ const CloudWorkSpaceList = ({
   const serversService = useService(ServersService);
   const account = useLiveData(authService.session.account$);
   const accountStatus = useLiveData(authService.session.status$);
+  const isPiscesSSO = useIsPiscesSSO();
   const navigateHelper = useNavigateHelper();
 
   const currentWorkspaceFlavour = useLiveData(
@@ -172,15 +181,19 @@ const CloudWorkSpaceList = ({
 
   return (
     <>
-      <WorkspaceServerInfo
-        server={server.id}
-        name={serverName}
-        account={account}
-        accountStatus={accountStatus}
-        onDeleteServer={handleDeleteServer}
-        onSignOut={handleSignOut}
-      />
-      {accountStatus === 'unauthenticated' ? (
+      {!hideServerInfo && (
+        <WorkspaceServerInfo
+          server={server.id}
+          name={serverName}
+          account={account}
+          accountStatus={accountStatus}
+          onDeleteServer={handleDeleteServer}
+          onSignOut={handleSignOut}
+        />
+      )}
+      {!hideServerInfo &&
+      accountStatus === 'unauthenticated' &&
+      !isPiscesSSO ? (
         <MenuItem key="sign-in" onClick={handleSignIn}>
           <div className={styles.signInMenuItemContent}>
             <div className={styles.signInIconWrapper}>
@@ -236,6 +249,7 @@ export const AFFiNEWorkspaceList = ({
 }) => {
   const workspacesService = useService(WorkspacesService);
   const workspaces = useLiveData(workspacesService.list.workspaces$);
+  const isPiscesSSO = useIsPiscesSSO();
 
   const confirmEnableCloud = useEnableCloud();
 
@@ -288,7 +302,9 @@ export const AFFiNEWorkspaceList = ({
 
   return (
     <>
-      {/* 1. affine-cloud */}
+      {/* 1. affine-cloud — in Pisces SSO mode this IS the self-hosted backend
+          where created workspaces live, so it must stay visible; we only drop
+          the server header chrome via `hideServerInfo`. */}
       <FrameworkScope
         key={affineCloudServer.id}
         scope={affineCloudServer.scope}
@@ -299,6 +315,7 @@ export const AFFiNEWorkspaceList = ({
             ({ flavour }) => flavour === affineCloudServer.id
           )}
           onClickWorkspace={handleClickWorkspace}
+          hideServerInfo={isPiscesSSO}
         />
       </FrameworkScope>
       {(localWorkspaces.length > 0 || selfhostServers.length > 0) && (
@@ -310,7 +327,7 @@ export const AFFiNEWorkspaceList = ({
         workspaces={localWorkspaces}
         onClickWorkspace={handleClickWorkspace}
         onClickEnableCloud={
-          showEnableCloudButton ? onClickEnableCloud : undefined
+          showEnableCloudButton && !isPiscesSSO ? onClickEnableCloud : undefined
         }
       />
       {selfhostServers.length > 0 && (

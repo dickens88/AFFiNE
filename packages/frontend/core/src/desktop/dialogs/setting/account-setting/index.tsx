@@ -6,6 +6,7 @@ import {
 } from '@affine/component/setting-components';
 import { Avatar } from '@affine/component/ui/avatar';
 import { Button } from '@affine/component/ui/button';
+import { useIsPiscesSSO } from '@affine/core/components/hooks/affine/use-is-pisces-sso';
 import { useSignOut } from '@affine/core/components/hooks/affine/use-sign-out';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { useCatchEventCallback } from '@affine/core/components/hooks/use-catch-event-hook';
@@ -181,6 +182,7 @@ export const AccountSetting = ({
     GlobalDialogService,
   });
   const serverFeatures = useLiveData(serverService.server.features$);
+  const isPiscesSSO = useIsPiscesSSO();
   const t = useI18n();
   const session = authService.session;
   useEffect(() => {
@@ -248,7 +250,9 @@ export const AccountSetting = ({
         {serverFeatures?.copilot && (
           <AIUsagePanel onChangeSettingState={onChangeSettingState} />
         )}
-        <IntegrationsPanel onChangeSettingState={onChangeSettingState} />
+        {!isPiscesSSO && (
+          <IntegrationsPanel onChangeSettingState={onChangeSettingState} />
+        )}
         <SettingRow
           name={t[`Sign out`]()}
           desc={t['com.affine.setting.sign.out.message']()}
